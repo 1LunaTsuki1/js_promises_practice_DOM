@@ -3,9 +3,11 @@
 const body = document.querySelector('body');
 
 const promise1 = new Promise((resolve, reject) => {
-  setTimeout(() => reject(new Error('First promise was rejected')), 3000);
+  setTimeout(() => {
+    reject(new Error('First promise was rejected'));
+  }, 3000);
 
-  addEventListener('click', () => {
+  document.addEventListener('click', () => {
     resolve('First promise was resolved');
   });
 });
