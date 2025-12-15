@@ -3,28 +3,56 @@
 const body = document.querySelector('body');
 
 const promise1 = new Promise((resolve, reject) => {
-  setTimeout(() => {
-    reject(new Error('First promise was rejected'));
+  let settled = false;
+  const timeOutId = setTimeout(() => {
+    if (settled) {
+      return;
+    }
+    settled = true;
+    cleanUp();
+    reject('First promise was rejected');
   }, 3000);
 
-  document.addEventListener('click', () => {
+  function cleanUp() {
+    clearTimeout(timeOutId);
+    document.removeEventListener('click', onClick);
+  }
+
+  function onClick() {
+    if (settled) {
+      return;
+    }
+    settled = true;
+    cleanUp();
     resolve('First promise was resolved');
-  });
+  }
+  document.addEventListener('click', onClick);
 });
 
 const promise2 = new Promise((resolve) => {
-  document.addEventListener('mousedown', (ev) => {
-    if (ev.button === 0 || ev.button === 2) {
-      resolve('Second promise was resolved');
-    }
-  });
+  document.addEventListener(
+    'mousedown',
+    (ev) => {
+      if (ev.button === 0 || ev.button === 2) {
+        resolve('Second promise was resolved');
+      }
+    },
+    { once: true },
+  );
 });
 
 const promise3 = new Promise((resolve) => {
+  let settled = false;
   let leftClicked = false;
   let rightClicked = false;
 
-  document.addEventListener('mousedown', (ev) => {
+  document.addEventListener('mousedown', onMousedown);
+
+  function onMousedown(ev) {
+    if (settled) {
+      return;
+    }
+
     if (ev.button === 0) {
       leftClicked = true;
     }
@@ -34,9 +62,15 @@ const promise3 = new Promise((resolve) => {
     }
 
     if (leftClicked && rightClicked) {
+      settled = true;
+      cleanUp();
       resolve('Third promise was resolved');
     }
-  });
+  }
+
+  function cleanUp() {
+    document.removeEventListener('mousedown', onMousedown);
+  }
 });
 
 function showMessage(message, error = false) {
